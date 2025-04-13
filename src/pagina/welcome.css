@@ -1,0 +1,48 @@
+:root {
+    --ion-color-primary: #0052CC; /* Trello Blue */
+    --ion-color-secondary: #E2E4E6; /* Light Grey */
+    --ion-color-tertiary: #0065FF; /* Accent Blue */
+  }
+  
+  .welcome-content {
+    --background: var(--ion-color-secondary);
+  }
+  
+  .welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 20px;
+    text-align: center;
+  }
+  
+  .welcome-icon {
+    font-size: 80px;
+    color: var(--ion-color-primary);
+    margin-bottom: 20px;
+  }
+  
+  .welcome-title {
+    font-size: 2rem;
+    color: var(--ion-color-primary);
+    margin-bottom: 10px;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1rem;
+    color: #4a4a4a;
+    margin-bottom: 30px;
+  }
+  
+  .login-button {
+    --background: var(--ion-color-primary);
+    --color: #fff;
+    margin-bottom: 15px;
+  }
+  
+  .register-button {
+    --background: var(--ion-color-tertiary);
+    --color: #fff;
+  }
