@@ -10,6 +10,8 @@ import {
   IonContent,
   IonItem,
   IonInput,
+  IonSelectOption,
+  IonSelect
 } from '@ionic/vue';
 import type { OverlayEventDetail } from '@ionic/core/components';
 import { ref, defineEmits } from 'vue';
@@ -53,8 +55,8 @@ const enviarTareas = async () => {
   const taskTitle = taskInputEl?.value;
   const taskDescription = descriptionInputEl?.value;
   const taskStatus = statusInput.value?.value;
-  const proyecto = 1;
-  const taskUsers = 1;
+  const proyecto = 1
+  const taskUsers = usuariosInput.value?.value;
 
 
     try {
@@ -83,7 +85,7 @@ const enviarTareas = async () => {
   };
     
   getUsers();
-  alert();
+  
 </script>
 <template>
   <ion-modal
@@ -131,8 +133,9 @@ const enviarTareas = async () => {
         placeholder="Task description"
       ></ion-input>
       </ion-item>
-      <ion-item>
+      <ion-item interface="action-sheet">
       <ion-select
+      interface="alert"
         ref="statusInput"
         label="Task Status"
         label-placement="stacked"
@@ -143,8 +146,9 @@ const enviarTareas = async () => {
         <ion-select-option value="completada">Completed</ion-select-option>
       </ion-select>
       </ion-item>
-      <ion-item v-if="usersLoaded">
+      <ion-item v-if="usersLoaded" interface="action-sheet">
         <ion-select
+        interface="alert"
         ref="usuariosInput"
         label="Task Users"
         label-placement="stacked"
