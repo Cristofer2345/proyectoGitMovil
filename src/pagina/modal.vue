@@ -16,7 +16,7 @@ import {
 import type { OverlayEventDetail } from '@ionic/core/components';
 import { ref, defineEmits } from 'vue';
 import api from '@/services/api'; // Importa tu servicio de API aquí
-
+import { CanalPusher } from '@/services/pusher'; 
 const emits = defineEmits<{
   (e: 'confirmed', name: string): void;
 }>();
@@ -35,6 +35,7 @@ const cancel = () => {
 };
 
 const confirm = async () => {
+console.log(statusInput.value?.value);
   enviarTareas();
   const inputEl = await input.value.$el?.getInputElement();
   const name = inputEl?.value;
@@ -54,11 +55,15 @@ const enviarTareas = async () => {
   const descriptionInputEl = await descriptionInput.value.$el?.getInputElement();
   const taskTitle = taskInputEl?.value;
   const taskDescription = descriptionInputEl?.value;
-  const taskStatus = statusInput.value?.value;
-  const proyecto = 1
-  const taskUsers = usuariosInput.value?.value;
+  const taskStatus = statusInput.value;
+  const proyecto = 2
+  const taskUsers = usuariosInput.value;
 
-
+ if (!taskTitle || !taskDescription || !taskStatus || !taskUsers) {
+    console.error('Todos los campos son obligatorios');
+    alert('Por favor, complete todos los campos antes de enviar.');
+    return;
+  }
     try {
       const response = await api.post('/tareas', {
         titulo_tarea: taskTitle,
@@ -136,7 +141,7 @@ const enviarTareas = async () => {
       <ion-item interface="action-sheet">
       <ion-select
       interface="alert"
-        ref="statusInput"
+        v-model="statusInput"
         label="Task Status"
         label-placement="stacked"
         placeholder="Select status"
@@ -149,7 +154,7 @@ const enviarTareas = async () => {
       <ion-item v-if="usersLoaded" interface="action-sheet">
         <ion-select
         interface="alert"
-        ref="usuariosInput"
+        v-model="usuariosInput"
         label="Task Users"
         label-placement="stacked"
         placeholder="Select user"

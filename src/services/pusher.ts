@@ -1,29 +1,51 @@
+import Echo, { Channel } from 'laravel-echo';
 import Pusher from 'pusher-js';
-import { a } from 'vite/dist/node/types.d-aGj9QkWt';
 
-// Inicializar Pusher
-const pusher = new Pusher(import.meta.env.PUSHER_KEY || 'a4d8798ab17f089f3ec8', {
+// Extender la interfaz Window para incluir la propiedad Pusher
+declare global {
+    interface Window {
+        Pusher: typeof Pusher;
+    }
+}
+
+// Inicializar Pusher y Laravel Echo
+window.Pusher = Pusher;
+
+const echo = new Echo({
+    broadcaster: 'pusher',
+    key: import.meta.env.VITE_PUSHER_KEY || 'a4d8798ab17f089f3ec8', 
     cluster: 'us2',
-    forceTLS: true
+    forceTLS: true,
 });
 
 
-export function CanalPusher(projectId:number, callback:any) {
-    const channel = pusher.subscribe('proyecto.' + projectId);
+interface TareaActualizadaEvent {
+    id: number;
+    nombre: string;
+    descripcion: string;
+    estado: string;
+    titulo_tarea: string;
+  
+}
 
-    channel.bind('tarea.actualizada', (data:any) => {
-        if (data) {
-            callback(data); // Llama a la función de callback con los datos recibidos
+// Función para suscribirse a un canal de Pusher y escuchar eventos
+export function CanalPusher(projectId: number, callback: (data: TareaActualizadaEvent) => void) {
+    console.log(`🧲 Subscrito al canal proyecto.${projectId}`);
+
+    const channel: Channel = echo.channel('proyecto.' + projectId);
+
+    channel.listen('.tarea.actualizada', (event: { tarea: TareaActualizadaEvent }) => {
+        if (event && event.tarea) {
+            console.log('📢 Evento tarea.actualizada recibido:', event.tarea);
+            callback(event.tarea);  
         } else {
-            console.error('Datos inválidos recibidos en el evento tarea.actualizada');
+            console.error('⚠️ Datos inválidos recibidos en el evento tarea.actualizada:', event);
         }
     });
 
-    channel.bind('pusher:subscription_error', (status:any) => {
-        console.error('Error al suscribirse al canal:', status);
-    });
 
     return () => {
-        pusher.unsubscribe('proyecto.' + projectId); // Desuscribirse cuando ya no sea necesario
+        echo.leave('proyecto.' + projectId);
+        console.log(`🚪 Saliste del canal proyecto.${projectId}`);
     };
 }

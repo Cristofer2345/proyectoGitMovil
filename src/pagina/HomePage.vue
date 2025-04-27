@@ -31,14 +31,14 @@
 </template>
 
 <script lang="ts" setup>
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol,  IonButtons,
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonButtons,
     IonButton,
     IonModal,
     IonItem,
-    IonInput, } from '@ionic/vue';
-import { ref, onMounted } from 'vue';
+    IonInput } from '@ionic/vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import api from '@/services/api';   
-import {CanalPusher} from '@/services/pusher';
+import { CanalPusher } from '@/services/pusher';
 import modal from '@/pagina/modal.vue';
 
 // Verificar si el token está presente
@@ -46,6 +46,11 @@ const token = localStorage.getItem('token');
 if (!token) {
   window.location.href = '/login'; // Redirigir si no está logueado
 }
+
+type column = {
+  title: string;
+  cards: string[];
+};
 
 // Estado reactivo para las columnas
 const columns = ref<any>([
@@ -98,16 +103,53 @@ const fetchColumns = async () => {
   } catch (error) {
     console.error('Error al obtener los datos de la tabla tareas:', error);
   }
-  
 };
+
+const unsubscribe = ref<() => void>(); 
 
 // Cargar los datos al montar el componente
 onMounted(() => {
   fetchColumns();
+
+  unsubscribe.value = CanalPusher(2, (data: any) => {
+    alert('Tarea actualizada');
+    console.log("Tarea actualizada recibida:", data);
+
+    // Elimina la tarea de todas las columnas
+    columns.value.forEach((column: column) => {
+      column.cards = column.cards.filter((titulo: string) => titulo !== data.titulo_tarea);
+    });
+
+    const estado: string = data.estado;
+    let targetColumn;
+
+    if (estado === 'pendiente') {
+      targetColumn = columns.value.find((col: column) => col.title === 'Por hacer');
+    } else if (estado === 'en progreso') {
+      targetColumn = columns.value.find((col: column) => col.title === 'En progreso');
+    } else if (estado === 'completada') {
+      targetColumn = columns.value.find((col: column) => col.title === 'Completado');
+    }
+
+    if (targetColumn) {
+      targetColumn.cards.push(data.titulo_tarea);
+    }
+  });
+
+  // Limpieza
+  onUnmounted(() => {
+    if (unsubscribe.value) {
+      unsubscribe.value(); 
+      console.log('Desuscrito de Pusher');
+    }
+  });
 });
+
 const handleConfirmed = (name: string) => {
   message.value = `Hello, ${name}!`;
 };
+
 const message = ref('This modal example uses triggers to automatically open a modal when the button is clicked.');
 </script>
+
 
