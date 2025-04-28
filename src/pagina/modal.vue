@@ -20,6 +20,13 @@ import { CanalPusher } from '@/services/pusher';
 const emits = defineEmits<{
   (e: 'confirmed', name: string): void;
 }>();
+ const props =  defineProps({
+  miVariable: {
+    type: Number, 
+    required: false
+  }
+});
+const proyectoId = props.miVariable;
 const usersLoaded = ref(false);
 const taskInput = ref<any>();
 const descriptionInput = ref<any>();    
@@ -37,11 +44,8 @@ const cancel = () => {
 const confirm = async () => {
 console.log(statusInput.value?.value);
   enviarTareas();
-  const inputEl = await input.value.$el?.getInputElement();
-  const name = inputEl?.value;
 
-
-  (modal.value?.$el as HTMLIonModalElement)?.dismiss(name, 'confirm');
+  (modal.value?.$el as HTMLIonModalElement)?.dismiss('confirm');
 };
 
 const onWillDismiss = (event: CustomEvent<OverlayEventDetail>) => {
@@ -56,9 +60,11 @@ const enviarTareas = async () => {
   const taskTitle = taskInputEl?.value;
   const taskDescription = descriptionInputEl?.value;
   const taskStatus = statusInput.value;
-  const proyecto = 2
+  const proyecto = proyectoId;
   const taskUsers = usuariosInput.value;
 
+
+  // Validar que todos los campos estén completos
  if (!taskTitle || !taskDescription || !taskStatus || !taskUsers) {
     console.error('Todos los campos son obligatorios');
     alert('Por favor, complete todos los campos antes de enviar.');
@@ -113,15 +119,6 @@ const enviarTareas = async () => {
     <ion-content class="ion-padding">
       <ion-item>
       <ion-input
-        ref="input"
-        label="Enter your name"
-        label-placement="stacked"
-        type="text"
-        placeholder="Your name"
-      ></ion-input>
-      </ion-item>
-      <ion-item>
-      <ion-input
         ref="taskInput"
         label="Task Title"
         label-placement="stacked"
@@ -146,9 +143,9 @@ const enviarTareas = async () => {
         label-placement="stacked"
         placeholder="Select status"
       >
-        <ion-select-option value="pendiente">Pending</ion-select-option>
-        <ion-select-option value="en progreso">In Progress</ion-select-option>
-        <ion-select-option value="completada">Completed</ion-select-option>
+        <ion-select-option value="pendiente">Pendiente</ion-select-option>
+        <ion-select-option value="en progreso">En progreso</ion-select-option>
+        <ion-select-option value="completada">Completada</ion-select-option>
       </ion-select>
       </ion-item>
       <ion-item v-if="usersLoaded" interface="action-sheet">

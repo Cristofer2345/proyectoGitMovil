@@ -29,7 +29,7 @@ interface TareaActualizadaEvent {
 }
 
 // Función para suscribirse a un canal de Pusher y escuchar eventos
-export function CanalPusher(projectId: number, callback: (data: TareaActualizadaEvent) => void) {
+export function CanalPusher(projectId: any, callback: (data: TareaActualizadaEvent) => void) {
     console.log(`🧲 Subscrito al canal proyecto.${projectId}`);
 
     const channel: Channel = echo.channel('proyecto.' + projectId);

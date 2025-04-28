@@ -11,6 +11,8 @@ const routes = [
   { path: '/register', component: Register }, 
   { path: '/home', component: HomePage },
   { path: '/welcome', component: Welcome },
+  {path: '/proyectos', component: () => import('../pagina/Proyecto.vue')},
+  {path: '/tareas', component: () => import('../pagina/Tareas.vue')},
 ];
 
 const router = createRouter({

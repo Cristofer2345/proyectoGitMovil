@@ -1,155 +1,216 @@
-<template>
-  <IonPage>
-    <IonHeader>
-      <IonToolbar>
-        <IonTitle>Mi Título</IonTitle>
-      </IonToolbar>
-    </IonHeader>
-
-    <IonContent>
-      
-      <IonGrid>
-        <IonRow>
-          <IonCol v-for="(column, index) in columns" :key="index" :style="{ backgroundColor: getColumnColor(index) }">
-            <h3>{{ column.title }}</h3>
-            <ul>
-             
-            </ul>
-            <ul>
-              <li v-for="(card, cardIndex) in column.cards" :key="cardIndex">{{ card }}</li>
-            </ul>
-            <button>Editar tarea </button>
-          </IonCol>
-        </IonRow>
-      </IonGrid>
-      <ion-content class="ion-padding">
-      <ion-button id="open-modal" expand="block">Open</ion-button>
-      <modal  @confirmed="handleConfirmed" />
-    </ion-content>
-    </IonContent>
-  </IonPage>
-</template>
-
 <script lang="ts" setup>
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonButtons,
-    IonButton,
-    IonModal,
-    IonItem,
-    IonInput } from '@ionic/vue';
-import { ref, onMounted, onUnmounted } from 'vue';
-import api from '@/services/api';   
+import {
+  IonPage,
+  IonMenu,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonMenuButton,
+  IonButtons,
+  IonItem,
+  IonIcon,
+  IonLabel,
+  IonList,
+} from '@ionic/vue';
+import { ref, onMounted,onUnmounted,nextTick } from 'vue';
+import { useRouter } from 'vue-router';
+import api from '@/services/api';
 import { CanalPusher } from '@/services/pusher';
-import modal from '@/pagina/modal.vue';
-
-// Verificar si el token está presente
 const token = localStorage.getItem('token');
 if (!token) {
-  window.location.href = '/login'; // Redirigir si no está logueado
+  window.location.href = '/login'; 
 }
 
-type column = {
-  title: string;
-  cards: string[];
+// Router para navegar
+const router = useRouter();
+
+// Nombre del usuario (lo puedes traer del token si quieres)
+const nombreUsuario = ref('Usuario');
+
+// Proyectos del usuario
+const proyectos = ref<any[]>([]);
+
+// Funciones para ir a otras páginas
+const irACrearProyecto = () => {
+  router.push('/proyectos');
 };
 
-// Estado reactivo para las columnas
-const columns = ref<any>([
-  { title: "Por hacer", cards: [] },
-  { title: "En progreso", cards: [] },
-  { title: "Completado", cards: [] }
-]);
+const irTareas = (id: any) => {
+  router.push({ path: '/tareas', query: { id } });
+};
 
-// Colores para las columnas
-const columnColors = ref<string[]>(['#FFCDD2', '#C8E6C9', '#BBDEFB', '#FFF9C4', '#D1C4E9']);
+const cerrarSesion = () => {
+  localStorage.removeItem('token');
+  router.push('/welcome');
+};
 
-// Función para obtener el color de la columna
-const getColumnColor = (index: number): string => columnColors.value[index % columnColors.value.length];
-
-// Función para cargar los datos desde la API
-const fetchColumns = async () => {
+// Función para obtener los proyectos
+const fetchProyectos = async () => {
   try {
-    const response = await api.get('/tareas');
-    console.log(response.data); // Verifica los datos de la respuesta
-
+    const response = await api.get('/proyectos');
     if (response.status !== 200) {
-      throw new Error('Error al obtener los datos de la tabla tareas');
+      throw new Error('Error al obtener los proyectos');
     }
 
-    const tareas = response.data;
-    if (!Array.isArray(tareas)) {
-      throw new Error('La respuesta no es un array de tareas');
+    const proyectosDATA = response.data;
+    if (!Array.isArray(proyectosDATA)) {
+      throw new Error('La respuesta no es un array de proyectosDATA');
     }
 
-    columns.value = [
-      {
-        title: "Por hacer",
-        cards: tareas
-          .filter(tarea => tarea.estado === 'pendiente')
-          .map(tarea => tarea.titulo_tarea)
-      },
-      {
-        title: "En progreso",
-        cards: tareas
-          .filter(tarea => tarea.estado === 'en progreso')
-          .map(tarea => tarea.titulo_tarea)
-      },
-      {
-        title: "Completado",
-        cards: tareas
-          .filter(tarea => tarea.estado === 'completada')
-          .map(tarea => tarea.titulo_tarea)
-      }
-    ];
+    // Aquí tomo cada tarea como un proyecto
+    proyectos.value = proyectosDATA.map((proyecto) => ({
+      id: proyecto.id,              
+      nombre: proyecto.titulo,      
+  
+    }));
   } catch (error) {
-    console.error('Error al obtener los datos de la tabla tareas:', error);
+    console.error('Error al cargar proyectos:', error);
   }
 };
 
+// Función para cerrar el menú
+const closeMenu = () => {
+  const menu = document.querySelector('ion-menu');
+  if (menu) {
+    menu.close(); // Cierra el menú cuando cambia de página
+  }
+};
 const unsubscribe = ref<() => void>(); 
-
-// Cargar los datos al montar el componente
 onMounted(() => {
-  fetchColumns();
-
-  unsubscribe.value = CanalPusher(2, (data: any) => {
-    alert('Tarea actualizada');
-    console.log("Tarea actualizada recibida:", data);
-
-    // Elimina la tarea de todas las columnas
-    columns.value.forEach((column: column) => {
-      column.cards = column.cards.filter((titulo: string) => titulo !== data.titulo_tarea);
+  fetchProyectos().then(() => {
+    proyectos.value.forEach((proyecto) => {
+      unsubscribe.value = CanalPusher(proyecto.id, (data: any) => {
+        alert(`Tarea actualizada en el proyecto ${proyecto.nombre}`);
+        console.log(`Tarea actualizada recibida en el proyecto ${proyecto.nombre}:`, data);
+      });
     });
-
-    const estado: string = data.estado;
-    let targetColumn;
-
-    if (estado === 'pendiente') {
-      targetColumn = columns.value.find((col: column) => col.title === 'Por hacer');
-    } else if (estado === 'en progreso') {
-      targetColumn = columns.value.find((col: column) => col.title === 'En progreso');
-    } else if (estado === 'completada') {
-      targetColumn = columns.value.find((col: column) => col.title === 'Completado');
-    }
-
-    if (targetColumn) {
-      targetColumn.cards.push(data.titulo_tarea);
-    }
   });
 
-  // Limpieza
-  onUnmounted(() => {
-    if (unsubscribe.value) {
-      unsubscribe.value(); 
-      console.log('Desuscrito de Pusher');
-    }
+nextTick(() => {
+  window.addEventListener('ionRouteDidChange', closeMenu);
+});
+    nextTick(() => {
+      window.addEventListener('ionRouteDidChange', closeMenu);
   });
 });
 
-const handleConfirmed = (name: string) => {
-  message.value = `Hello, ${name}!`;
-};
 
-const message = ref('This modal example uses triggers to automatically open a modal when the button is clicked.');
+onUnmounted(() => {
+  window.removeEventListener('ionRouteDidChange', closeMenu);
+});
+
+
+
+
+
+
 </script>
+
+<template>
+  <IonPage>
+    <IonMenu content-id="main-content">
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Menú</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
+        <IonList>
+          <IonItem button @click="router.push('/home')">
+              <IonIcon slot="start" name="home-outline" />
+              <IonLabel>Inicio</IonLabel>
+          </IonItem>
+          <IonItem button @click="irACrearProyecto">
+            <IonIcon slot="start" name="add-circle-outline" />
+            <IonLabel>Crear Proyecto</IonLabel>
+          </IonItem>
+          <IonItem button @click="irTareas">
+            <IonIcon slot="start" name="folder-open-outline" />
+            <IonLabel>Proyectos</IonLabel>
+          </IonItem>
+          <IonItem button @click="cerrarSesion">
+            <IonIcon slot="start" name="log-out-outline" />
+            <IonLabel color="danger">Cerrar Sesión</IonLabel>
+          </IonItem>
+        </IonList>
+      </IonContent>
+    </IonMenu>
+
+    <div id="main-content">
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonMenuButton />
+          </IonButtons>
+          <IonTitle>Inicio</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+    </div>
+      <IonContent class="ion-padding">
+        <div class="bienvenida">
+          <h1>¡Bienvenido, {{ nombreUsuario }}!</h1>
+          <p>Estos son tus proyectos:</p>
+        </div>
+
+        <IonGrid>
+          <IonRow class="ion-justify-content-start" style="gap: 16px;">
+            <IonCol
+              v-for="proyecto in proyectos"
+              :key="proyecto.id"
+              size="12"
+              size-md="4"
+              size-lg="3"
+            >
+              <IonCard class="proyecto-card" @click="irTareas(proyecto.id)">
+                <IonCardHeader>
+                  <IonCardTitle>{{ proyecto.nombre }}</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <p>{{ proyecto.descripcion }}</p>
+                  <small>Suscrito al proyecto : {{ proyecto.id }}</small>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
+          </IonRow>
+        </IonGrid>
+      </IonContent>
+    
+  </IonPage>
+</template>
+
+<style scoped>
+.bienvenida {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.bienvenida h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.bienvenida p {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.proyecto-card {
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.proyecto-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+</style>
 
 
