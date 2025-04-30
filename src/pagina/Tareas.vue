@@ -52,7 +52,9 @@ type column = {
   title: string;
   cards: string[];
 };
-const columnColors = ref<string[]>(['#0079BF', '#F2D600', '#61BD4F']); // Azul, Amarillo, Verde
+const tareaSeleccionada = ref<any>(null);
+
+const columnColors = ref<string[]>(['#E3E3E3', '#F5F5F5', '#D4F4DD']); 
 
 const getColumnColor = (index: number): string =>
   columnColors.value[index % columnColors.value.length];
@@ -70,25 +72,20 @@ const fetchColumns = async () => {
     }
 
     columns.value = [
-      {
-        title: 'Por hacer',
-        cards: tareas
-          .filter((tarea) => tarea.estado === 'pendiente')
-          .map((tarea) => tarea.titulo_tarea),
-      },
-      {
-        title: 'En progreso',
-        cards: tareas
-          .filter((tarea) => tarea.estado === 'en progreso')
-          .map((tarea) => tarea.titulo_tarea),
-      },
-      {
-        title: 'Completado',
-        cards: tareas
-          .filter((tarea) => tarea.estado === 'completada')
-          .map((tarea) => tarea.titulo_tarea),
-      },
-    ];
+  {
+    title: 'Por hacer',
+    cards: tareas.filter((tarea) => tarea.estado === 'pendiente'),
+  },
+  {
+    title: 'En progreso',
+    cards: tareas.filter((tarea) => tarea.estado === 'en progreso'),
+  },
+  {
+    title: 'Completado',
+    cards: tareas.filter((tarea) => tarea.estado === 'completada'),
+  },
+];
+
   } catch (error) {
     console.error('Error al obtener los datos de la tabla tareas:', error);
   }
@@ -101,43 +98,71 @@ const closeMenu = () => {
   }
 };
 const unsubscribe = ref<() => void>(); 
+// ... todo tu código anterior permanece igual hasta aquí ...
+
 onMounted(() => {
   fetchColumns();
-  unsubscribe.value = CanalPusher(proyectoId, (data: any) => {
-    alert('Tarea actualizada');
-    console.log("Tarea actualizada recibida:", data);
+  unsubscribe.value = CanalPusher(proyectoId, (data: { tarea: any; accion: string }) => {
+    console.log("Evento recibido:", data);
 
-    // Elimina la tarea de todas las columnas
-    columns.value.forEach((column: column) => {
-      column.cards = column.cards.filter((titulo: string) => titulo !== data.titulo_tarea);
-    });
+    const { tarea, accion } = data;
 
-    const estado: string = data.estado;
-    let targetColumn;
+    if (accion === 'añadido') {
+      // Agregar la tarea a la columna correspondiente
+      const targetColumn = columns.value.find((col: column) => {
+        return col.title === (tarea.estado === 'pendiente'
+          ? 'Por hacer'
+          : tarea.estado === 'en progreso'
+          ? 'En progreso'
+          : 'Completado');
+      });
 
-    if (estado === 'pendiente') {
-      targetColumn = columns.value.find((col: column) => col.title === 'Por hacer');
-    } else if (estado === 'en progreso') {
-      targetColumn = columns.value.find((col: column) => col.title === 'En progreso');
-    } else if (estado === 'completada') {
-      targetColumn = columns.value.find((col: column) => col.title === 'Completado');
+      if (targetColumn) {
+        targetColumn.cards.push(tarea);
+        alert('Nueva tarea añadida: ' + tarea.titulo_tarea);
+      }
+    } else if (accion === 'actualizado') {
+      // Actualizar la tarea en la columna correspondiente
+      columns.value.forEach((column: column) => {
+        const tareaIndex = column.cards.findIndex((card: any) => card.id === tarea.id);
+        if (tareaIndex !== -1) {
+          column.cards.splice(tareaIndex, 1);
+        }
+      });
+
+      const targetColumn = columns.value.find((col: column) => {
+        return col.title === (tarea.estado === 'pendiente'
+          ? 'Por hacer'
+          : tarea.estado === 'en progreso'
+          ? 'En progreso'
+          : 'Completado');
+      });
+
+      if (targetColumn) {
+        targetColumn.cards.push(tarea);
+        alert('Tarea actualizada: ' + tarea.titulo_tarea);
+      }
+    } else if (accion === 'eliminado') {
+      // Eliminar la tarea de todas las columnas
+      columns.value.forEach((column: column) => {
+        column.cards = column.cards.filter((card: any) => card.id !== tarea.id);
+      });
+      alert('Tarea eliminada: ' + tarea.titulo_tarea);
+    } else {
+      console.error('Acción desconocida:', accion);
     }
+  });
 
-    if (targetColumn) {
-      targetColumn.cards.push(data.titulo_tarea);
-    }
-});
   alert("Este es el id del proyecto: " + proyectoId);
-   // Aseguramos que el menú se cierre después de cada cambio de ruta
-   nextTick(() => {
+  nextTick(() => {
     window.addEventListener('ionRouteDidChange', closeMenu);
   });
 
-  // Limpiar el evento cuando se desmonta el componente
   onUnmounted(() => {
     window.removeEventListener('ionRouteDidChange', closeMenu);
   });
 });
+
 
 const handleConfirmed = (name: string) => {
   message.value = `Hello, ${name}!`;
@@ -145,6 +170,30 @@ const handleConfirmed = (name: string) => {
 const message = ref(
   'This modal example uses triggers to automatically open a modal when the button is clicked.'
 );
+const editarTarea = (tarea: any) => {
+  tareaSeleccionada.value = tarea;
+  const modalElement = document.getElementById('open-modal');
+  modalElement?.click();
+};
+
+
+
+const eliminarTarea = async (id: number) => {
+  try {
+    await api.delete(`/tareas/${id}`);
+
+    // Eliminar la tarea de todas las columnas localmente
+    columns.value.forEach((column: column) => {
+      column.cards = column.cards.filter((tarea: any) => tarea.id !== id);
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar tarea:', error);
+  }
+};
+
+
+
 </script>
 
 <template>
@@ -202,22 +251,29 @@ const message = ref(
             >
               <div class="column-content">
                 <h3>{{ column.title }}</h3>
-                <ul>
-                  <li v-for="(card, cardIndex) in column.cards" :key="cardIndex">
-                    {{ card }}
-                  </li>
-                </ul>
-                <IonButton expand="full" color="light" class="edit-button">
-                  Editar tarea
-                </IonButton>
+                  <ul>
+                    <li v-for="(card, cardIndex) in column.cards" :key="cardIndex" class="tarea-card">
+                      <div>{{ card.titulo_tarea }}</div>
+                      <IonButton size="small" color="warning" @click="editarTarea(card)">
+                        Editar
+                      </IonButton>
+                      <IonButton size="small" color="danger" @click="eliminarTarea(card.id)">
+                        Eliminar
+                      </IonButton>
+                    </li>
+                  </ul>
+
+
+               
               </div>
             </IonCol>
           </IonRow>
         </IonGrid>
 
-        <IonButton id="open-modal" expand="block" class="open-modal-button">
-          Open
-        </IonButton>
+        <IonButton id="open-modal" class="floating-button" color="primary">
+  Crear
+</IonButton>
+
         <modal :miVariable="parseInt(proyectoId?.toString() || '0')"  @confirmed="handleConfirmed" />
       </IonContent>
     
@@ -284,4 +340,22 @@ const message = ref(
 .open-modal-button {
   margin-top: 20px;
 }
+.floating-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  border-radius: 50px;
+  padding: 12px 20px;
+}
+.tarea-card {
+  background: rgba(255, 255, 255, 0.9);
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #000;
+}
+
+
 </style>

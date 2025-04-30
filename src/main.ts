@@ -35,12 +35,19 @@ import '@ionic/vue/css/palettes/dark.system.css';
 import './theme/variables.css';
 import  OneSignal   from 'onesignal-cordova-plugin';
 import { ref } from 'vue';
-import { watch } from 'vue';
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
 
-  const waitForOneSignalId = async (): Promise<string> => {
+const isLoading = ref(true);
+
+router.isReady().then(async () => {
+  app.mount('#app');
+  /*
+  // Inicializar OneSignal
+  OneSignal.initialize('0e02f2e5-3fa7-4055-9167-ad6629546d6f');
+
+  const waitForId = async (): Promise<string> => {
     return new Promise((resolve) => {
       const checkId = async () => {
         const id = await OneSignal.User.getOnesignalId();
@@ -53,41 +60,31 @@ const app = createApp(App)
       checkId();
     });
   };
-  router.isReady().then(async () => {
-    app.mount('#app');
-  
-    // Inicializar OneSignal
-    OneSignal.initialize('0e02f2e5-3fa7-4055-9167-ad6629546d6f');
-  
-    // Pedir permiso de notificaciones
-    await OneSignal.Notifications.requestPermission();
-  
-    // Ir a Splash mientras se obtiene el ID
-    router.push('/splash');
-  
-    // Esperar a obtener el OneSignal ID
-    const oneSignalId = await waitForOneSignalId();
-    console.log('OneSignal ID:', oneSignalId);
-  
-    // Guardarlo en localStorage
-    localStorage.setItem('SubscriptionId', oneSignalId);
-  
-    // Ir al login después de tener el ID
-    router.push('/welcome');
-  
-    // Chequeo periódico del ID (opcional, cada 1 minuto)
-    const interval = setInterval(async () => {
-      const id = await OneSignal.User.getOnesignalId();
-      console.log('OneSignal ID (check):', id);
-      if (id) {
-        clearInterval(interval);
-      }
-    }, 60000);
-    
-  }
-  
-  );
 
+  // Pedir permiso de notificaciones
+  await OneSignal.Notifications.requestPermission();
+
+  // Esperar a obtener el OneSignal ID
+  const oneSignalId = await waitForId();
+  console.log('OneSignal ID:', oneSignalId);
+
+  // Guardarlo en localStorage
+  localStorage.setItem('SubscriptionId', oneSignalId);
+
+  // Cambiar el estado de carga y redirigir al login
+  isLoading.value = false;
+  router.push('/welcome');
+
+  // Chequeo periódico del ID (opcional, cada 1 minuto)
+  const interval = setInterval(async () => {
+    const id = await OneSignal.User.getOnesignalId();
+    console.log('OneSignal ID (check):', id);
+    if (id) {
+      clearInterval(interval);
+    }
+  }, 60000);
+*/
+});
 // Add a loading screen component or logic in your App.vue to display based on `isLoading`
 
 

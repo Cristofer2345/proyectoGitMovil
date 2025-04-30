@@ -4,7 +4,7 @@ import HomePage from '../pagina/HomePage.vue';
 import Register from '../pagina/Register.vue';
 import Login from '../pagina/Login.vue';
 import Welcome from '../pagina/Welcome.vue';
-import LoadingScreen from '@/pagina/LoadingScreen.vue';
+import LoadingScreen from '../pagina/LoadingScreen.vue';
 
 const routes = [
   { path: '/', redirect: '/welcome' },
@@ -12,7 +12,7 @@ const routes = [
   { path: '/register', component: Register }, 
   { path: '/home', component: HomePage },
   { path: '/welcome', component: Welcome },
-  { path: '/splash', component: LoadingScreen },
+  //{ path: '/splash', component: LoadingScreen },
   {path: '/proyectos', component: () => import('../pagina/Proyecto.vue')},
   {path: '/tareas', component: () => import('../pagina/Tareas.vue')},
 ];

@@ -19,25 +19,28 @@ const echo = new Echo({
 });
 
 
-interface TareaActualizadaEvent {
-    id: number;
-    nombre: string;
-    descripcion: string;
-    estado: string;
-    titulo_tarea: string;
-  
+interface TareaActualizadaTimeReal {
+    tarea: {
+        id: number;
+        nombre: string;
+        descripcion: string;
+        estado: string;
+        titulo_tarea: string;
+    }
+ 
+    accion: 'añadido' | 'actualizado' | 'eliminado';
 }
 
 // Función para suscribirse a un canal de Pusher y escuchar eventos
-export function CanalPusher(projectId: any, callback: (data: TareaActualizadaEvent) => void) {
+export function CanalPusher(projectId: any, callback: (data:TareaActualizadaTimeReal) => void) {
     console.log(`🧲 Subscrito al canal proyecto.${projectId}`);
 
     const channel: Channel = echo.channel('proyecto.' + projectId);
 
-    channel.listen('.tarea.actualizada', (event: { tarea: TareaActualizadaEvent }) => {
-        if (event && event.tarea) {
+    channel.listen('.tarea.actualizada', (event:TareaActualizadaTimeReal) => {
+        if (event && event.tarea && event.accion) {
             console.log('📢 Evento tarea.actualizada recibido:', event.tarea);
-            callback(event.tarea);  
+            callback(event);  
         } else {
             console.error('⚠️ Datos inválidos recibidos en el evento tarea.actualizada:', event);
         }

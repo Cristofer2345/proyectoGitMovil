@@ -30,6 +30,7 @@ const proyectoId = props.miVariable;
 const usersLoaded = ref(false);
 const taskInput = ref<any>();
 const descriptionInput = ref<any>();    
+const statusInput = ref<any>();
 const usuariosInput = ref<any>();
 const modal = ref<any>(null);
 const input = ref<any>(null);
@@ -41,7 +42,7 @@ const cancel = () => {
 };
 
 const confirm = async () => {
-console.log(taskInput.value?.value);
+console.log(statusInput.value?.value);
   enviarTareas();
 
   (modal.value?.$el as HTMLIonModalElement)?.dismiss('confirm');
@@ -58,13 +59,13 @@ const enviarTareas = async () => {
   const descriptionInputEl = await descriptionInput.value.$el?.getInputElement();
   const taskTitle = taskInputEl?.value;
   const taskDescription = descriptionInputEl?.value;
-  const taskStatus = 'pendiente';
+  const taskStatus = statusInput.value;
   const proyecto = proyectoId;
   const taskUsers = usuariosInput.value;
 
 
   // Validar que todos los campos estén completos
- if (!taskTitle || !taskDescription ||  !taskUsers) {
+ if (!taskTitle || !taskDescription || !taskStatus || !taskUsers) {
     console.error('Todos los campos son obligatorios');
     alert('Por favor, complete todos los campos antes de enviar.');
     return;
@@ -134,7 +135,19 @@ const enviarTareas = async () => {
         placeholder="Task description"
       ></ion-input>
       </ion-item>
-     
+      <ion-item interface="action-sheet">
+      <ion-select
+      interface="alert"
+        v-model="statusInput"
+        label="Task Status"
+        label-placement="stacked"
+        placeholder="Select status"
+      >
+        <ion-select-option value="pendiente">Pendiente</ion-select-option>
+        <ion-select-option value="en progreso">En progreso</ion-select-option>
+        <ion-select-option value="completada">Completada</ion-select-option>
+      </ion-select>
+      </ion-item>
       <ion-item v-if="usersLoaded" interface="action-sheet">
         <ion-select
         interface="alert"
@@ -156,7 +169,5 @@ const enviarTareas = async () => {
     </ion-content>
   </ion-modal>
 </template>
-
-
 
 
