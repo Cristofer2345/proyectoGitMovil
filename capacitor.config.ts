@@ -6,6 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     allowNavigation: ['localhost', 'proyectoapilaravel-production.up.railway.app'] 
+  },
+  ios: {
+    // ... 
+    handleApplicationNotifications: false
   }
 };
  

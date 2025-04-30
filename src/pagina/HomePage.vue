@@ -20,10 +20,12 @@ import {
   IonLabel,
   IonList,
 } from '@ionic/vue';
-import { ref, onMounted,onUnmounted,nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
 import { CanalPusher } from '@/services/pusher';
+import { CanalPusherProyecto } from '@/services/pusherProyectos'; // ← AÑADIDO
+
 const token = localStorage.getItem('token');
 if (!token) {
   window.location.href = '/login'; 
@@ -65,11 +67,9 @@ const fetchProyectos = async () => {
       throw new Error('La respuesta no es un array de proyectosDATA');
     }
 
-    // Aquí tomo cada tarea como un proyecto
     proyectos.value = proyectosDATA.map((proyecto) => ({
       id: proyecto.id,              
-      nombre: proyecto.titulo,      
-  
+      nombre: proyecto.titulo,     
     }));
   } catch (error) {
     console.error('Error al cargar proyectos:', error);
@@ -80,10 +80,13 @@ const fetchProyectos = async () => {
 const closeMenu = () => {
   const menu = document.querySelector('ion-menu');
   if (menu) {
-    menu.close(); // Cierra el menú cuando cambia de página
+    menu.close(); 
   }
 };
+
 const unsubscribe = ref<() => void>(); 
+let unsubscribeProyecto: (() => void) | null = null; // ← AÑADIDO
+
 onMounted(() => {
   fetchProyectos().then(() => {
     proyectos.value.forEach((proyecto) => {
@@ -94,25 +97,31 @@ onMounted(() => {
     });
   });
 
-nextTick(() => {
-  window.addEventListener('ionRouteDidChange', closeMenu);
-});
-    nextTick(() => {
-      window.addEventListener('ionRouteDidChange', closeMenu);
+  unsubscribeProyecto = CanalPusherProyecto((evento) => {
+    if (evento.accion === 'añadido') {
+      const nuevoProyecto = evento.proyecto;
+      if (!proyectos.value.some(p => p.id === nuevoProyecto.id)) {
+        proyectos.value.push({
+          id: nuevoProyecto.id,
+          nombre: nuevoProyecto.titulo,
+        });
+      }
+    }
+  });
+
+  nextTick(() => {
+    window.addEventListener('ionRouteDidChange', closeMenu);
   });
 });
 
-
 onUnmounted(() => {
   window.removeEventListener('ionRouteDidChange', closeMenu);
+  if (unsubscribeProyecto) {
+    unsubscribeProyecto(); // ← Desuscribirse del canal
+  }
 });
-
-
-
-
-
-
 </script>
+
 
 <template>
   <IonPage>

@@ -30,17 +30,29 @@
   const router = useRouter();
   
   const registrarUsuario = async () => {
+    const subscriptionId = await new Promise((resolve) => {
+      setTimeout(() => {
+      resolve(localStorage.getItem('SubscriptionId'));
+      }, 10000);
+    });
+
+    if (!subscriptionId) {
+      alert('No se encontró una suscripción activa.');
+      return;
+    }
     try {
       const response = await api.post('/register', {
         name: name.value,
         email: email.value,
+        credencial: localStorage.getItem('SubscriptionId'),
         password: password.value,
       });
   
       localStorage.setItem('token', response.data.token);
       router.push('/home');
     } catch (error) {
-      alert('Error al registrarse');
+  
+      alert('Error al registrarse:', error.response ? error.response.data : error.message);
     }
   };
   </script>

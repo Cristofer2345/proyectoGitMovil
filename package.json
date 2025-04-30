@@ -25,6 +25,7 @@
     "axios": "^1.8.4",
     "ionicons": "^7.0.0",
     "laravel-echo": "^2.0.2",
+    "onesignal-cordova-plugin": "^5.2.11",
     "pusher-js": "^8.4.0",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0"
