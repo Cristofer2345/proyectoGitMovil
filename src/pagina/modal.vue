@@ -1,4 +1,3 @@
-<!-- src/components/InlineModal.vue -->
 <script lang="ts" setup>
 import {
   IonModal,
@@ -156,7 +155,3 @@ const enviarTareas = async () => {
     </ion-content>
   </ion-modal>
 </template>
-
-
-
-

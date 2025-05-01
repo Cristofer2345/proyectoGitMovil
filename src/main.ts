@@ -43,7 +43,7 @@ const isLoading = ref(true);
 
 router.isReady().then(async () => {
   app.mount('#app');
-  /*
+  
   // Inicializar OneSignal
   OneSignal.initialize('0e02f2e5-3fa7-4055-9167-ad6629546d6f');
 
@@ -83,7 +83,7 @@ router.isReady().then(async () => {
       clearInterval(interval);
     }
   }, 60000);
-*/
+
 });
 // Add a loading screen component or logic in your App.vue to display based on `isLoading`
 

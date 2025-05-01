@@ -21,6 +21,7 @@ import { ref, onMounted,onUnmounted,nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
 import modal from '@/pagina/modal.vue';
+import modal2 from '@/pagina/ModalEditarProyecto.vue';
 import { CanalPusher } from '@/services/pusher';
 
 const router = useRouter();
@@ -153,7 +154,8 @@ onMounted(() => {
     }
   });
 
-  alert("Este es el id del proyecto: " + proyectoId);
+  
+
   nextTick(() => {
     window.addEventListener('ionRouteDidChange', closeMenu);
   });
@@ -172,7 +174,7 @@ const message = ref(
 );
 const editarTarea = (tarea: any) => {
   tareaSeleccionada.value = tarea;
-  const modalElement = document.getElementById('open-modal');
+  const modalElement = document.getElementById('abrir-modal-actualizar')
   modalElement?.click();
 };
 
@@ -273,7 +275,7 @@ const eliminarTarea = async (id: number) => {
         <IonButton id="open-modal" class="floating-button" color="primary">
   Crear
 </IonButton>
-
+   
         <modal :miVariable="parseInt(proyectoId?.toString() || '0')"  @confirmed="handleConfirmed" />
       </IonContent>
     
