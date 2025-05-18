@@ -21,7 +21,7 @@ import { ref, onMounted,onUnmounted,nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
 import modal from '@/pagina/modal.vue';
-import modal2 from '@/pagina/ModalEditarProyecto.vue';
+import modalEdit from '@/pagina/ModalEditarTarea.vue'; 
 import { CanalPusher } from '@/services/pusher';
 
 const router = useRouter();
@@ -174,7 +174,7 @@ const message = ref(
 );
 const editarTarea = (tarea: any) => {
   tareaSeleccionada.value = tarea;
-  const modalElement = document.getElementById('abrir-modal-actualizar')
+  const modalElement = document.getElementById('open-modalEditTask');
   modalElement?.click();
 };
 
@@ -259,6 +259,7 @@ const eliminarTarea = async (id: number) => {
                       <IonButton size="small" color="warning" @click="editarTarea(card)">
                         Editar
                       </IonButton>
+                         <modalEdit :miVariableEditTask="parseInt(proyectoId?.toString() || '0')"  @confirmed="handleConfirmed" />
                       <IonButton size="small" color="danger" @click="eliminarTarea(card.id)">
                         Eliminar
                       </IonButton>
