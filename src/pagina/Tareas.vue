@@ -24,6 +24,10 @@ import modal from '@/pagina/modal.vue';
 import modalEdit from '@/pagina/ModalEditarTarea.vue'; 
 import { CanalPusher } from '@/services/pusher';
 
+import { idCard } from 'ionicons/icons';
+const IdTareaEdit = ref<any>(null);
+const IdUsuarioEdit = ref<any>(null);
+
 const router = useRouter();
 const proyectoId = router.currentRoute.value.query.id;
 const irACrearProyecto = () => {
@@ -178,6 +182,7 @@ const editarTarea = (tarea: any) => {
   modalElement?.click();
 };
 
+const showEditModal = ref(false);
 
 
 const eliminarTarea = async (id: number) => {
@@ -195,6 +200,13 @@ const eliminarTarea = async (id: number) => {
 };
 
 
+
+const saveAtrributes =   (id: string, idUsuario: string)=> {
+ 
+  IdTareaEdit.value = id;
+  IdUsuarioEdit.value = idUsuario;
+  showEditModal.value = true;
+};
 
 </script>
 
@@ -256,7 +268,9 @@ const eliminarTarea = async (id: number) => {
                   <ul>
                     <li v-for="(card, cardIndex) in column.cards" :key="cardIndex" class="tarea-card">
                       <div>{{ card.titulo_tarea }}</div>
-                      <IonButton size="small" color="warning" @click="editarTarea(card)">
+                     
+                      <IonButton size="small" id="open-modalEditTask" color="warning" @click="saveAtrributes(card.id.toString(), card.id_usuario.toString())">
+
                         Editar
                       </IonButton>
                          <modalEdit :miVariableEditTask="parseInt(proyectoId?.toString() || '0')"  @confirmed="handleConfirmed" />
@@ -276,7 +290,17 @@ const eliminarTarea = async (id: number) => {
         <IonButton id="open-modal" class="floating-button" color="primary">
   Crear
 </IonButton>
-   
+
+
+<modalEdit 
+  v-if="showEditModal"
+  :IdProyects="parseInt(proyectoId?.toString() || '0')"
+  :idUsuario="parseInt(IdUsuarioEdit?.toString() || '0')" 
+  :IdTarea="parseInt(IdTareaEdit?.toString() || '0')" 
+  @confirmed="handleConfirmed" 
+  @close="showEditModal = false"
+/>
+
         <modal :miVariable="parseInt(proyectoId?.toString() || '0')"  @confirmed="handleConfirmed" />
       </IonContent>
     

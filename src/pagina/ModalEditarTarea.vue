@@ -16,34 +16,54 @@ import type { OverlayEventDetail } from '@ionic/core/components';
 import { ref, defineEmits } from 'vue';
 import api from '@/services/api'; // Importa tu servicio de API aquí
 import { CanalPusher } from '@/services/pusher'; 
-const emits = defineEmits<{
+const emits = defineEmits<{ 
+  (e: 'close'): void;
   (e: 'confirmed', name: string): void;
 }>();
- const props =  defineProps({
-  miVariableEditTask: {
-    type: Number, 
+const props = defineProps({
+ 
+  IdProyects: {
+    type: Number,
     required: false
-  }
+  },
+  idUsuario: {
+    type: Number,
+    required: false
+  },
+  IdTarea: {
+    type: Number,
+    required: false
+  },
 });
-const proyectoId = props.miVariable;
+
+const proyectoId = props.IdProyects;
+const tareaId = props.IdTarea;
+const idUsuario = props.idUsuario;
+
+
 const usersLoaded = ref(false);
 const taskInput = ref<any>();
 const descriptionInput = ref<any>();    
 const usuariosInput = ref<any>();
-const modal = ref<any>(null);
-const input = ref<any>(null);
+
+const modalEditTask = ref<any>(null);
 
 
 const cancel = () => {
-  
-  modal.value.$el?.dismiss(null, 'cancel');
+alert('Modal closed'+tareaId);
+  modalEditTask.value.$el?.dismiss('cancel');
+  alert('Modal closed');
+
 };
 
 const confirm = async () => {
 console.log(taskInput.value?.value);
-  enviarTareas();
 
-  (modal.value?.$el as HTMLIonModalElement)?.dismiss('confirm');
+
+  enviarTareas();
+ 
+  (modalEditTask.value?.$el as HTMLIonModalElement)?.dismiss('confirm');
+
 };
 
 const onWillDismiss = (event: CustomEvent<OverlayEventDetail>) => {
