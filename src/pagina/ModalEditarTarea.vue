@@ -16,10 +16,8 @@ import type { OverlayEventDetail } from '@ionic/core/components';
 import { ref, defineEmits } from 'vue';
 import api from '@/services/api'; // Importa tu servicio de API aquí
 import { CanalPusher } from '@/services/pusher'; 
-const emits = defineEmits<{ 
-  (e: 'close'): void;
-  (e: 'confirmed', name: string): void;
-}>();
+const isopen = ref(true);
+const emits = defineEmits(['close', 'confirmed']);
 const props = defineProps({
  
   IdProyects: {
@@ -34,13 +32,28 @@ const props = defineProps({
     type: Number,
     required: false
   },
+  titleTask: {
+    type: String,
+    required: false
+  },
+  descripcion: {
+    type: String,
+    required: false
+  },
+  estado: {
+    type: String,
+    required: false
+  }
+
+
 });
 
 const proyectoId = props.IdProyects;
 const tareaId = props.IdTarea;
 const idUsuario = props.idUsuario;
-
-
+const titleTask = ref(props.titleTask);
+const descriptionTask = ref(props.descripcion);
+const estadoTask = ref(props.estado);
 const usersLoaded = ref(false);
 const taskInput = ref<any>();
 const descriptionInput = ref<any>();    
@@ -50,10 +63,9 @@ const modalEditTask = ref<any>(null);
 
 
 const cancel = () => {
-alert('Modal closed'+tareaId);
-  modalEditTask.value.$el?.dismiss('cancel');
-  alert('Modal closed');
-
+alert('Modal closed'+ ' ' + tareaId + ' ' + proyectoId + ' ' + idUsuario);
+  modalEditTask.value?.$el?.dismiss(null, 'cancel');
+ emits('close');
 };
 
 const confirm = async () => {
@@ -62,36 +74,35 @@ console.log(taskInput.value?.value);
 
   enviarTareas();
  
-  (modalEditTask.value?.$el as HTMLIonModalElement)?.dismiss('confirm');
-
+modalEditTask.value?.$el?.dismiss(null, 'confirm');
+emits('close');
+  emits('confirmed');
 };
 
 const onWillDismiss = (event: CustomEvent<OverlayEventDetail>) => {
   if (event.detail.role === 'confirm') {
-    emits('confirmed', event.detail.data);
+   emits('confirmed');
+
   }
 
 };
 const enviarTareas = async () => {
-  const taskInputEl = await taskInput.value.$el?.getInputElement();
-  const descriptionInputEl = await descriptionInput.value.$el?.getInputElement();
-  const taskTitle = taskInputEl?.value;
-  const taskDescription = descriptionInputEl?.value;
-  const taskStatus = 'pendiente';
+  const taskInputEl =  titleTask.value;
+  const descriptionInputEl = descriptionTask.value;
+  const taskStatus = estadoTask.value;
   const proyecto = proyectoId;
-  const taskUsers = usuariosInput.value;
-
+  const taskUsers = idUsuario;
 
   // Validar que todos los campos estén completos
- if (!taskTitle || !taskDescription ||  !taskUsers) {
+ if (!taskInputEl || !descriptionInputEl ||  !taskUsers) {
     console.error('Todos los campos son obligatorios');
     alert('Por favor, complete todos los campos antes de enviar.');
     return;
   }
     try {
-      const response = await api.post('/tareas', {
-        titulo_tarea: taskTitle,
-        descripcion: taskDescription,
+      const response = await api.put('/tareas/' + tareaId, {
+        titulo_tarea: taskInputEl,
+        descripcion: descriptionInputEl,
         estado: taskStatus,
         id_usuario: taskUsers,
         id_proyecto: proyecto,
@@ -118,8 +129,8 @@ const enviarTareas = async () => {
 </script>
 <template>
   <ion-modal
-    ref="modalEditTask"
-    trigger="open-modalEditTask"
+   ref="modalEditTask"
+   :is-open="isopen"
     @willDismiss="onWillDismiss"
   >
     <ion-header>
@@ -137,7 +148,7 @@ const enviarTareas = async () => {
     <ion-content class="ion-padding">
       <ion-item>
       <ion-input
-        ref="taskInput"
+        v-model="titleTask"
         label="Task Title"
         label-placement="stacked"
         type="text"
@@ -146,32 +157,34 @@ const enviarTareas = async () => {
       </ion-item>
       <ion-item>
       <ion-input
-        ref="descriptionInput"
+        v-model="descriptionTask"
         label="Task Description"
         label-placement="stacked"
         type="text"
         placeholder="Task description"
       ></ion-input>
       </ion-item>
-     
-      <ion-item v-if="usersLoaded" interface="action-sheet">
+        <ion-item  interface="action-sheet">
         <ion-select
         interface="alert"
-        v-model="usuariosInput"
-        label="Task Users"
+        v-model="estadoTask"
+        
+        label="Task Status"
         label-placement="stacked"
-        placeholder="Select user"
-      >
-        <ion-select-option 
-          v-for="user in users" 
-          :key="user.id" 
-          :value="user.id"
-          style="color: white;"
-        >
-          {{ user.name }}
+        placeholder="Select status"
+            >
+        <ion-select-option value="pendiente" style="color: white;">
+          Pendiente 
         </ion-select-option>
-      </ion-select>
+        <ion-select-option value="en progreso" style="color: white;">
+          En progreso
+        </ion-select-option>
+        <ion-select-option value="completada" style="color: white;">
+          Completado
+        </ion-select-option>
+            </ion-select>
       </ion-item>
+    
     </ion-content>
   </ion-modal>
 </template>

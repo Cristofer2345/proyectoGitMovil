@@ -25,9 +25,12 @@ import modalEdit from '@/pagina/ModalEditarTarea.vue';
 import { CanalPusher } from '@/services/pusher';
 
 import { idCard } from 'ionicons/icons';
+import { s } from 'vite/dist/node/types.d-aGj9QkWt';
 const IdTareaEdit = ref<any>(null);
 const IdUsuarioEdit = ref<any>(null);
-
+ const TitleTaskEdit = ref<any>(null);
+const estadoTarea = ref<any>(null);
+const descripcionTarea = ref<any>(null);
 const router = useRouter();
 const proyectoId = router.currentRoute.value.query.id;
 const irACrearProyecto = () => {
@@ -57,7 +60,7 @@ type column = {
   title: string;
   cards: string[];
 };
-const tareaSeleccionada = ref<any>(null);
+
 
 const columnColors = ref<string[]>(['#E3E3E3', '#F5F5F5', '#D4F4DD']); 
 
@@ -176,11 +179,6 @@ const handleConfirmed = (name: string) => {
 const message = ref(
   'This modal example uses triggers to automatically open a modal when the button is clicked.'
 );
-const editarTarea = (tarea: any) => {
-  tareaSeleccionada.value = tarea;
-  const modalElement = document.getElementById('open-modalEditTask');
-  modalElement?.click();
-};
 
 const showEditModal = ref(false);
 
@@ -201,11 +199,15 @@ const eliminarTarea = async (id: number) => {
 
 
 
-const saveAtrributes =   (id: string, idUsuario: string)=> {
- 
+const saveAtrributes =   (id: string, idUsuario: string,titleTask:string,estado:string,descripcion:string)=> {
   IdTareaEdit.value = id;
   IdUsuarioEdit.value = idUsuario;
+  TitleTaskEdit.value = titleTask;
+  estadoTarea.value = estado;
+  descripcionTarea.value = descripcion;
   showEditModal.value = true;
+  alert(`ID de la tarea: ${id}, ID del usuario: ${idUsuario}, Título de la tarea: ${titleTask}, Estado: ${estado}, Descripción: ${descripcion}`);
+
 };
 
 </script>
@@ -268,12 +270,11 @@ const saveAtrributes =   (id: string, idUsuario: string)=> {
                   <ul>
                     <li v-for="(card, cardIndex) in column.cards" :key="cardIndex" class="tarea-card">
                       <div>{{ card.titulo_tarea }}</div>
-                     
-                      <IonButton size="small" id="open-modalEditTask" color="warning" @click="saveAtrributes(card.id.toString(), card.id_usuario.toString())">
+
+                      <IonButton size="small" color="warning" @click="saveAtrributes(card.id.toString(), card.id_usuario.toString(),card.titulo_tarea,card.estado,card.descripcion)">
 
                         Editar
-                      </IonButton>
-                         <modalEdit :miVariableEditTask="parseInt(proyectoId?.toString() || '0')"  @confirmed="handleConfirmed" />
+                      </IonButton> 
                       <IonButton size="small" color="danger" @click="eliminarTarea(card.id)">
                         Eliminar
                       </IonButton>
@@ -293,11 +294,14 @@ const saveAtrributes =   (id: string, idUsuario: string)=> {
 
 
 <modalEdit 
-  v-if="showEditModal"
+  v-if="showEditModal" 
   :IdProyects="parseInt(proyectoId?.toString() || '0')"
   :idUsuario="parseInt(IdUsuarioEdit?.toString() || '0')" 
   :IdTarea="parseInt(IdTareaEdit?.toString() || '0')" 
-  @confirmed="handleConfirmed" 
+  :titleTask="TitleTaskEdit?.toString() || ''"
+  :estado="estadoTarea?.toString() || ''"
+  :descripcion="descripcionTarea?.toString() || ''"
+  @confirmed="handleConfirmed"
   @close="showEditModal = false"
 />
 
